@@ -6,35 +6,25 @@
     <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
     <style>
         body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; background: #f5f5f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
-        
-        /* 네비게이션 & 검색 */
         nav { background: #000; color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; gap: 20px; }
         .logo { cursor: pointer; font-weight: 900; font-size: 24px; white-space: nowrap; }
         .search-container { flex-grow: 1; max-width: 500px; display: flex; position: relative; }
         #search-input { width: 100%; padding: 10px 15px; border-radius: 20px; border: none; outline: none; }
         .nav-menu { display: flex; align-items: center; gap: 8px; }
         nav button { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
-
-        /* 카테고리 & 정렬 (빠졌던 부분 복구) */
         .category-menu { display: flex; justify-content: center; gap: 20px; background: white; padding: 15px 0; border-bottom: 1px solid #ddd; position: sticky; top: 64px; z-index: 999; }
         .cat-btn { border: none; background: none; font-size: 14px; color: #777; cursor: pointer; padding: 5px 10px; transition: 0.3s; }
         .cat-btn.active { color: #000; font-weight: bold; border-bottom: 2px solid #000; }
         .sort-bar { max-width: 1200px; margin: 20px auto 0; padding: 0 5%; text-align: right; }
         #sort-select { padding: 8px; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; }
-
-        /* 상품 리스트 */
         .product-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 20px 5% 60px; max-width: 1200px; margin: 0 auto; flex: 1; }
         .product-card { background: white; padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .product-card:hover { transform: translateY(-7px); }
         .product-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
         .price { color: #ff4757; font-weight: bold; font-size: 18px; margin: 10px 0; }
-
-        /* 모달 디자인 */
         #age-verification-popup, #login-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 40px; border-radius: 20px; width: 320px; text-align: center; }
         .modal-content input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-
-        /* 푸터 (사업자 정보) */
         footer { background: #333; color: #aaa; padding: 40px 5%; font-size: 13px; line-height: 1.8; margin-top: auto; }
         .footer-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; }
     </style>
@@ -110,13 +100,16 @@
     </footer>
 
 <script>
+    // [설정] 구글 앱스 스크립트 배포 URL을 여기에 넣으세요
+    const GOOGLE_SHEET_URL = "구글_배포_URL_여기에_입력";
+
     const products = [
         { id: 1, name: "닷모드 100W 블랙", price: 189000, image: "images/dotmod.png", category: "mod", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
-        { id: 2, name: "유웰 발라리안 팟", price: 10000, image: "images/valcoil.jpg", category: "coil", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
-        { id: 3, name: "[입호흡] 데드레빗 MTL RTA", price: 42000, image: "images/deadrebbit.png", category: "top", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
-        { id: 4, name: "[폐호흡] 레몬얼려먹구싶오", price: 25000, image: "images/lemon.png", category: "big", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
-        { id: 5, name: "[입호흡] 카디날 블랙", price: 24000, image: "images/kardinalbl.jpg", category: "small", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
-        { id: 6, name: "[리빌드] 칸탈A1 24GA", price: 3000, image: "images/lemon.png", category: "rta", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+        { id: 2, name: "유웰 발라리안 팟", price: 10000, image: "images/valcoil.jpg", category: "coil", desc: "전설적인 맛표현, 유웰 발라리안 전용 팟입니다." },
+        { id: 3, name: "[입호흡] 데드레빗 MTL RTA", price: 42000, image: "images/deadrebbit.png", category: "top", desc: "정교한 흡압 조절이 가능한 입호흡 리빌드 무화기입니다." },
+        { id: 4, name: "[폐호흡] 레몬얼려먹구싶오", price: 25000, image: "images/lemon.png", category: "big", desc: "상큼한 레몬과 강력한 쿨링의 조화!" },
+        { id: 5, name: "[입호흡] 카디날 블랙", price: 24000, image: "images/kardinalbl.jpg", category: "small", desc: "고급스러운 연초향의 대명사 카디날 시리즈입니다." },
+        { id: 6, name: "[리빌드] 칸탈A1 24GA", price: 3000, image: "images/lemon.png", category: "rta", desc: "리빌드 유저를 위한 표준 칸탈 와이어입니다." },
     ];
 
     let currentList = [...products];
@@ -135,6 +128,16 @@
                 <button style="width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); addCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">장바구니 담기</button>
             </div>
         `).join('');
+    }
+
+    // 주문 데이터를 구글 시트로 전송하는 핵심 함수
+    function sendOrderToStaff(orderData) {
+        fetch(GOOGLE_SHEET_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(orderData)
+        });
     }
 
     function search() {
@@ -161,37 +164,32 @@
     function handleAuth(type) {
         const id = document.getElementById('user-id').value;
         const pw = document.getElementById('user-pw').value;
-        
         if(!id || !pw) return alert("아이디와 비밀번호를 입력해주세요.");
 
         if(type === 'signup') {
-            // 회원가입 클릭 시
             const IMP = window.IMP;
-            IMP.init('imp71630478'); // 본인의 가맹점 식별코드로 변경
-
+            IMP.init('imp71630478'); 
             IMP.certification({ 
-                pg: 'html5_inicis', // KG이니시스 본인인증
+                pg: 'html5_inicis', 
                 merchant_uid: 'cert_' + Date.now(), 
                 popup: true 
             }, function(rsp) {
                 if (rsp.success) {
-                    // [회원가입 처리] 인증 성공 시 로컬스토리지에 저장
                     localStorage.setItem(id, JSON.stringify({
                         pw: pw, 
                         isAdult: true,
-                        name: rsp.name || "사용자" // 인증된 이름 저장 가능
+                        name: rsp.name || "사용자"
                     }));
-                    alert("성인인증 완료! 회원가입이 성공적으로 되었습니다. 이제 로그인해주세요.");
+                    alert("성인인증 완료! 이제 로그인해주세요.");
                 } else {
-                    alert("인증에 실패했습니다: " + rsp.error_msg);
+                    alert("인증 실패: " + rsp.error_msg);
                 }
             });
         } else {
-            // 로그인 클릭 시
             const data = JSON.parse(localStorage.getItem(id));
             if(data && data.pw === pw) {
                 sessionStorage.setItem('loginUser', id);
-                sessionStorage.setItem('isAdult', 'true'); // 세션에도 성인여부 저장
+                sessionStorage.setItem('isAdult', 'true');
                 alert(id + "님 반가워요!");
                 location.reload();
             } else { 
@@ -204,6 +202,10 @@
         let cart = JSON.parse(localStorage.getItem('myCart')) || [];
         cart.push({...p, qty: 1});
         localStorage.setItem('myCart', JSON.stringify(cart));
+        
+        // [직원 알림 예시] 장바구니에 담기만 해도 시트에 기록하고 싶다면 아래 주석 해제
+        // sendOrderToStaff({ name: sessionStorage.getItem('loginUser') || '비회원', product: p.name, price: p.price });
+
         if(confirm("장바구니로 갈까요?")) location.href='cart.html';
     }
 
