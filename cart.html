@@ -2,45 +2,36 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>장바구니 - VAPING ALL </title>
-    <script src="https://js.tosspayments.com/v1/payment"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장바구니 - VAPING ALL</title>
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
     <style>
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: #333; }
         .cart-container { max-width: 600px; margin: 40px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        h2 { border-bottom: 2px solid #333; padding-bottom: 15px; margin-top: 0; }
-        
+        h2 { border-bottom: 2px solid #333; padding-bottom: 15px; margin-top: 0; font-size: 24px; }
         .cart-item { display: flex; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
-        .cart-item img { width: 70px; height: 70px; border-radius: 8px; margin-right: 15px; object-fit: cover; }
+        .cart-item img { width: 80px; height: 80px; border-radius: 8px; margin-right: 15px; object-fit: cover; }
         .item-info { flex-grow: 1; }
         .item-name { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
         .item-price { color: #888; font-size: 14px; }
-        
         .total-section { margin-top: 25px; padding-top: 20px; border-top: 2px solid #eee; text-align: right; }
-        .total-label { font-size: 16px; color: #555; }
-        .total-price { font-size: 24px; font-weight: bold; color: #ff4757; display: block; margin-top: 5px; }
-        
+        .total-price { font-size: 26px; font-weight: bold; color: #ff4757; display: block; margin-top: 5px; }
         .btn-group { margin-top: 30px; display: flex; gap: 10px; }
-        .btn { flex: 1; height: 55px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn { flex: 1; height: 55px; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
         .btn-order { background: #000; color: #fff; }
         .btn-shop { background: #eee; color: #333; }
-        .btn:hover { opacity: 0.8; }
-        
-        .remove-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 12px; text-decoration: underline; }
-        .remove-btn:hover { color: red; }
+        .remove-btn { background: none; border: none; color: #ff4757; cursor: pointer; font-size: 13px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="cart-container">
-        <h2>장바구니</h2>
-        
+        <h2>장바구니 (PortOne v1)</h2>
         <div id="cart-list"></div>
-
         <div class="total-section">
-            <span class="total-label">총 결제 금액</span>
+            <span class="total-label">총 결제 예정 금액</span>
             <span class="total-price" id="total-amount">0원</span>
         </div>
-
         <div class="btn-group">
             <button class="btn btn-shop" onclick="location.href='index.html'">쇼핑 계속하기</button>
             <button class="btn btn-order" onclick="checkout()">주문하기</button>
@@ -48,14 +39,14 @@
     </div>
 
     <script>
-        // 1. 장바구니 화면 그리기
+        // 1. 화면 렌더링
         function renderCart() {
             const cart = JSON.parse(localStorage.getItem('myCart')) || [];
             const listElement = document.getElementById('cart-list');
             let total = 0;
 
             if (cart.length === 0) {
-                listElement.innerHTML = "<p style='text-align:center; padding: 40px 0; color:#999;'>장바구니가 비어 있습니다.</p>";
+                listElement.innerHTML = `<p style="text-align:center; padding:50px; color:#999;">장바구니가 비어 있습니다.</p>`;
                 document.getElementById('total-amount').innerText = "0원";
                 return;
             }
@@ -64,58 +55,57 @@
                 total += (Number(item.price) * item.qty);
                 return `
                     <div class="cart-item">
-                        <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/70?text=No+Image'">
+                        <img src="${item.image}" onerror="this.src='https://via.placeholder.com/80'">
                         <div class="item-info">
                             <div class="item-name">${item.name}</div>
-                            <div class="item-price">${Number(item.price).toLocaleString()}원 x ${item.qty}개</div>
+                            <div class="item-price">${Number(item.price).toLocaleString()}원 | ${item.qty}개</div>
                         </div>
                         <button class="remove-btn" onclick="removeItem(${index})">삭제</button>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
-
             document.getElementById('total-amount').innerText = total.toLocaleString() + "원";
         }
 
-        // 2. 상품 삭제 기능
         function removeItem(index) {
             let cart = JSON.parse(localStorage.getItem('myCart')) || [];
-            cart.splice(index, 1); // 해당 순서 상품 제거
+            cart.splice(index, 1);
             localStorage.setItem('myCart', JSON.stringify(cart));
-            renderCart(); // 다시 그리기
+            renderCart();
         }
 
-        // 3. ★ 핵심: 주문하기 (로그인 체크 강화) ★
+        // 2. 포트원 v1 결제 실행
         function checkout() {
-            // [로그인 체크] 세션에 유저 정보가 있는지 확인
-            const loggedInUser = sessionStorage.getItem('loginUser');
-
-            if (!loggedInUser) {
-                alert("성인 인증이 필요한 상품이 포함되어 있습니다.\n로그인(회원가입) 후 구매해 주세요.");
-                location.href = 'index.html'; // 메인 페이지로 이동
-                return; // 결제창 실행을 중단함
-            }
-
             const cart = JSON.parse(localStorage.getItem('myCart')) || [];
-            if (cart.length === 0) return alert("장바구니가 비어 있습니다.");
+            if (cart.length === 0) return alert("상품이 없습니다.");
 
-            // 총 금액 계산
-            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
             const orderName = cart.length > 1 ? `${cart[0].name} 외 ${cart.length - 1}건` : cart[0].name;
 
-            // 토스페이먼츠 결제창 호출
-            const tossPayments = TossPayments('test_ck_D5bZzMfa5noR9nXykmVn3W4n14uD');
-            tossPayments.requestPayment('카드', {
+            // [필독] 포트원 v1 핵심 설정
+            const IMP = window.IMP; 
+            IMP.init("imp71630478"); // [변경!] 내 식별코드(IMP 코드)를 넣으세요. (예: imp12345678)
+
+            IMP.request_pay({
+                pg: "tosspay", // PG사 설정 (예: kcp, kakaopay, tosspay 등)
+                pay_method: "card",
+                merchant_uid: "order_" + new Date().getTime(),
+                name: orderName,
                 amount: totalAmount,
-                orderId: 'cart-' + new Date().getTime(),
-                orderName: orderName,
-                successUrl: window.location.origin,
-                failUrl: window.location.origin,
+                buyer_email: "test@vapingall.com",
+                buyer_name: "구매자",
+                buyer_tel: "010-0000-0000",
+            }, function (rsp) {
+                if (rsp.success) {
+                    alert("결제가 완료되었습니다!");
+                    localStorage.removeItem('myCart');
+                    location.href = "index.html";
+                } else {
+                    alert("결제 실패: " + rsp.error_msg);
+                }
             });
         }
 
-        // 페이지 열리자마자 장바구니 목록 로드
-        renderCart();
+        window.onload = renderCart;
     </script>
 </body>
 </html>
