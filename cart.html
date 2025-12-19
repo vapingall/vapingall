@@ -26,7 +26,7 @@
 <body>
 
     <div class="cart-container">
-        <h2>장바구니 (PortOne v1)</h2>
+        <h2>장바구니 (VAPING ALL)</h2>
         <div id="cart-list"></div>
         <div class="total-section">
             <span class="total-label">총 결제 예정 금액</span>
@@ -39,7 +39,9 @@
     </div>
 
     <script>
-        // 1. 화면 렌더링
+        // [필독] 구글 앱스 스크립트 배포 URL을 여기에 넣으세요!
+        const GOOGLE_SHEET_URL = "여기에_구글_배포_URL_입력";
+
         function renderCart() {
             const cart = JSON.parse(localStorage.getItem('myCart')) || [];
             const listElement = document.getElementById('cart-list');
@@ -73,30 +75,49 @@
             renderCart();
         }
 
-        // 2. 포트원 v1 결제 실행
+        // 구글 시트로 주문 데이터를 보내는 함수
+        function sendToGoogleSheet(data) {
+            fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(data)
+            });
+        }
+
         function checkout() {
             const cart = JSON.parse(localStorage.getItem('myCart')) || [];
             if (cart.length === 0) return alert("상품이 없습니다.");
 
             const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) * item.qty), 0);
             const orderName = cart.length > 1 ? `${cart[0].name} 외 ${cart.length - 1}건` : cart[0].name;
+            
+            // 로그인 정보 가져오기 (index.html에서 저장한 값)
+            const userName = sessionStorage.getItem('loginUser') || "비회원";
 
-            // [필독] 포트원 v1 핵심 설정
             const IMP = window.IMP; 
-            IMP.init("imp71630478"); // [변경!] 내 식별코드(IMP 코드)를 넣으세요. (예: imp12345678)
+            IMP.init("imp71630478"); 
 
             IMP.request_pay({
-                pg: "tosspay", // PG사 설정 (예: kcp, kakaopay, tosspay 등)
+                pg: "tosspay", 
                 pay_method: "card",
                 merchant_uid: "order_" + new Date().getTime(),
                 name: orderName,
                 amount: totalAmount,
-                buyer_email: "test@vapingall.com",
-                buyer_name: "구매자",
+                buyer_email: "customer@email.com",
+                buyer_name: userName,
                 buyer_tel: "010-0000-0000",
             }, function (rsp) {
                 if (rsp.success) {
-                    alert("결제가 완료되었습니다!");
+                    // [핵심] 결제 성공 시 구글 시트로 데이터 전송
+                    sendToGoogleSheet({
+                        name: userName,
+                        product: orderName,
+                        price: totalAmount,
+                        phone: "결제 완료(확인 필요)"
+                    });
+
+                    alert("결제가 완료되었습니다! 직원이 확인 후 배송을 시작합니다.");
                     localStorage.removeItem('myCart');
                     location.href = "index.html";
                 } else {
