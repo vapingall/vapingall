@@ -98,12 +98,12 @@
         <div class="footer-content">
             <div>
                 <b>VAPING ALL (베이핑 올)</b><br>
-                대표자: 송수민 | 사업자번호: 826-20-02320 | 통신판매: 제2023-서울-0000호<br>
-                주소: 충남 천안시 동남구 충절로42 | 이메일: NATURE110143@GMAIL.COM 
+                대표자: 홍길동 | 사업자번호: 000-00-00000 | 통신판매: 제2023-서울-0000호<br>
+                주소: 서울특별시 강남구 테헤란로 123 | 이메일: help@vapingall.com
             </div>
             <div>
-                <b>고객센터: 010-2489-7554 </b><br>
-                평일 09:00 ~ 22:00 (주말/공휴일 휴무)<br>
+                <b>고객센터: 1588-0000</b><br>
+                평일 10:00 ~ 17:00 (주말/공휴일 휴무)<br>
                 계좌: 국민은행 000000-00-000000 (베이핑올)
             </div>
         </div>
@@ -161,23 +161,42 @@
     function handleAuth(type) {
         const id = document.getElementById('user-id').value;
         const pw = document.getElementById('user-pw').value;
-        if(!id || !pw) return alert("입력 정보가 부족합니다.");
+        
+        if(!id || !pw) return alert("아이디와 비밀번호를 입력해주세요.");
 
         if(type === 'signup') {
-            IMP.init('imp00000000');
-            IMP.certification({ pg: 'inicis_unified.official', merchant_uid: 'cert_'+Date.now(), popup: true }, function(rsp) {
-                if (rsp.success || id === 'test') {
-                    localStorage.setItem(id, JSON.stringify({pw, isAdult: true}));
-                    alert("성인인증 완료 및 가입 성공!");
+            // 회원가입 클릭 시
+            const IMP = window.IMP;
+            IMP.init('imp71630478'); // 본인의 가맹점 식별코드로 변경
+
+            IMP.certification({ 
+                pg: 'html5_inicis', // KG이니시스 본인인증
+                merchant_uid: 'cert_' + Date.now(), 
+                popup: true 
+            }, function(rsp) {
+                if (rsp.success) {
+                    // [회원가입 처리] 인증 성공 시 로컬스토리지에 저장
+                    localStorage.setItem(id, JSON.stringify({
+                        pw: pw, 
+                        isAdult: true,
+                        name: rsp.name || "사용자" // 인증된 이름 저장 가능
+                    }));
+                    alert("성인인증 완료! 회원가입이 성공적으로 되었습니다. 이제 로그인해주세요.");
+                } else {
+                    alert("인증에 실패했습니다: " + rsp.error_msg);
                 }
             });
         } else {
+            // 로그인 클릭 시
             const data = JSON.parse(localStorage.getItem(id));
             if(data && data.pw === pw) {
                 sessionStorage.setItem('loginUser', id);
+                sessionStorage.setItem('isAdult', 'true'); // 세션에도 성인여부 저장
                 alert(id + "님 반가워요!");
                 location.reload();
-            } else { alert("로그인 실패"); }
+            } else { 
+                alert("아이디 또는 비밀번호가 일치하지 않습니다."); 
+            }
         }
     }
 
@@ -206,5 +225,4 @@
     }
 </script>
 </body>
-
 </html>
