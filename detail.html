@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>상품 상세 정보 - VAPING ALL</title>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; background: #f5f5f5; color: #333; line-height: 1.6; }
+        nav { background: #000; color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
+        .logo { cursor: pointer; font-weight: 900; font-size: 24px; letter-spacing: 2px; }
+        .container { max-width: 1000px; margin: 50px auto; padding: 0 5%; display: flex; gap: 50px; flex-wrap: wrap; }
+        .product-img-box { flex: 1; min-width: 300px; }
+        .product-img-box img { width: 100%; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; }
+        .product-info-box { flex: 1; min-width: 300px; display: flex; flex-direction: column; justify-content: center; }
+        .category-tag { color: #999; font-size: 14px; margin-bottom: 10px; }
+        h1 { margin: 0 0 20px 0; font-size: 32px; font-weight: 800; }
+        .price { font-size: 28px; color: #ff4757; font-weight: bold; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .description { color: #666; margin-bottom: 40px; }
+        .button-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 18px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; font-size: 16px; transition: 0.3s; }
+        .btn-cart { background: #000; color: #fff; }
+        .btn-back { background: #fff; color: #333; border: 1px solid #ddd; }
+        footer { background: #333; color: #aaa; padding: 40px 5%; font-size: 13px; margin-top: 100px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo" onclick="location.href='index.html'">VAPING ALL</div>
+        <button onclick="location.href='cart.html'" style="background:#333; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">🛒 장바구니</button>
+    </nav>
+
+    <div class="container">
+        <div class="product-img-box">
+            <img id="detail-img" src="https://via.placeholder.com/500" alt="상품 이미지">
+        </div>
+
+        <div class="product-info-box">
+            <div class="category-tag">PREMIUM VAPING SHOP</div>
+            <h1 id="detail-name">데이터를 불러오고 있습니다...</h1>
+            <div class="price" id="detail-price">0원</div>
+            
+            <div class="description">
+                <b>[상품 설명]</b><br>
+                <span id="detail-desc">데이터를 불러오고 있습니다...</span>
+                <br><br>
+                <p style="font-size: 0.9em; color: #999;">
+                    본 상품은 VAPING ALL에서 엄격한 검수를 거친 정품입니다.<br>
+                    미성년자는 구매가 불가능하며, 사용 전 주의사항을 반드시 확인하시기 바랍니다.
+                </p>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-cart" onclick="addToCartFromDetail()">장바구니 담기</button>
+                <button class="btn btn-back" onclick="history.back()">뒤로가기</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 VAPING ALL. All Rights Reserved.
+    </footer>
+
+    <script>
+        // 전역 변수로 선언하여 함수 어디서든 접근 가능하게 함
+        let currentProduct = {};
+
+        window.onload = function() {
+            try {
+                // 1. URL 파라미터 읽기
+                const params = new URLSearchParams(window.location.search);
+                
+                // 2. 데이터 추출 및 안전하게 디코딩
+                currentProduct = {
+                    id: params.get('id'),
+                    name: params.get('name') ? decodeURIComponent(params.get('name')) : null,
+                    price: params.get('price'),
+                    image: params.get('image') ? decodeURIComponent(params.get('image')) : "https://via.placeholder.com/500",
+                    desc: params.get('desc') ? decodeURIComponent(params.get('desc')) : "상품 설명이 없습니다."
+                };
+
+                // 3. 데이터 검증 (필수 정보가 없으면 빠져나감)
+                if (!currentProduct.name || !currentProduct.price) {
+                    throw new Error("필수 데이터 누락");
+                }
+
+                // 4. 화면 UI 업데이트
+                document.getElementById('detail-name').innerText = currentProduct.name;
+                document.getElementById('detail-price').innerText = parseInt(currentProduct.price).toLocaleString() + "원";
+                document.getElementById('detail-img').src = currentProduct.image;
+                document.getElementById('detail-desc').innerText = currentProduct.desc;
+                document.title = currentProduct.name + " - VAPING ALL";
+
+            } catch (error) {
+                console.error("상세페이지 로딩 에러:", error);
+                alert("상품 정보를 불러올 수 없습니다. 메인으로 돌아갑니다.");
+                location.href = 'index.html';
+            }
+        };
+
+        function addToCartFromDetail() {
+            if (!currentProduct.id) return;
+
+            let cart = JSON.parse(localStorage.getItem('myCart')) || [];
+            
+            const foundIndex = cart.findIndex(item => item.id == currentProduct.id);
+            if (foundIndex > -1) {
+                cart[foundIndex].qty += 1;
+            } else {
+                cart.push({
+                    id: currentProduct.id,
+                    name: currentProduct.name,
+                    price: parseInt(currentProduct.price),
+                    image: currentProduct.image,
+                    qty: 1
+                });
+            }
+
+            localStorage.setItem('myCart', JSON.stringify(cart));
+            
+            if (confirm("장바구니에 담겼습니다. 장바구니 페이지로 이동할까요?")) {
+                location.href = 'cart.html';
+            }
+        }
+    </script>
+</body>
+</html>

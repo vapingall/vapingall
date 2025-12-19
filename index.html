@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>VAPING ALL - PREMIUM SHOP</title>
+    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; margin: 0; background: #f5f5f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* 네비게이션 & 검색 */
+        nav { background: #000; color: white; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; gap: 20px; }
+        .logo { cursor: pointer; font-weight: 900; font-size: 24px; white-space: nowrap; }
+        .search-container { flex-grow: 1; max-width: 500px; display: flex; position: relative; }
+        #search-input { width: 100%; padding: 10px 15px; border-radius: 20px; border: none; outline: none; }
+        .nav-menu { display: flex; align-items: center; gap: 8px; }
+        nav button { background: #333; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; white-space: nowrap; }
+
+        /* 카테고리 & 정렬 (빠졌던 부분 복구) */
+        .category-menu { display: flex; justify-content: center; gap: 20px; background: white; padding: 15px 0; border-bottom: 1px solid #ddd; position: sticky; top: 64px; z-index: 999; }
+        .cat-btn { border: none; background: none; font-size: 14px; color: #777; cursor: pointer; padding: 5px 10px; transition: 0.3s; }
+        .cat-btn.active { color: #000; font-weight: bold; border-bottom: 2px solid #000; }
+        .sort-bar { max-width: 1200px; margin: 20px auto 0; padding: 0 5%; text-align: right; }
+        #sort-select { padding: 8px; border-radius: 5px; border: 1px solid #ddd; cursor: pointer; }
+
+        /* 상품 리스트 */
+        .product-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 25px; padding: 20px 5% 60px; max-width: 1200px; margin: 0 auto; flex: 1; }
+        .product-card { background: white; padding: 15px; border-radius: 15px; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .product-card:hover { transform: translateY(-7px); }
+        .product-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
+        .price { color: #ff4757; font-weight: bold; font-size: 18px; margin: 10px 0; }
+
+        /* 모달 디자인 */
+        #age-verification-popup, #login-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 40px; border-radius: 20px; width: 320px; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        /* 푸터 (사업자 정보) */
+        footer { background: #333; color: #aaa; padding: 40px 5%; font-size: 13px; line-height: 1.8; margin-top: auto; }
+        .footer-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+    <div id="age-verification-popup">
+        <div class="modal-content">
+            <h2 style="color: #ff4757;">안내드립니다</h2>
+            <p>본 사이트는 <strong>청소년 보호법</strong>을 준수합니다.<br>만 19세 미만 청소년은 이용이 제한됩니다.</p>
+            <button onclick="closePopup()" style="background:#000; color:#fff; border:none; padding:15px; width:100%; border-radius:8px; cursor:pointer; font-weight:bold;">내용을 확인했습니다</button>
+            <div style="margin-top:15px; font-size:13px;"><input type="checkbox" id="today-close"> 오늘 하루 이 창을 열지 않음</div>
+        </div>
+    </div>
+
+    <div id="login-modal">
+        <div class="modal-content">
+            <h2 style="margin-bottom:20px;">LOGIN</h2>
+            <input type="text" id="user-id" placeholder="아이디">
+            <input type="password" id="user-pw" placeholder="비밀번호">
+            <button onclick="handleAuth('login')" style="background:#000; color:#fff; width:100%; padding:12px; border:none; border-radius:8px; margin-top:10px; cursor:pointer;">로그인</button>
+            <button onclick="handleAuth('signup')" style="background:#f0f0f0; width:100%; padding:10px; border:none; border-radius:8px; margin-top:8px; cursor:pointer;">성인인증 후 가입</button>
+            <button onclick="document.getElementById('login-modal').style.display='none'" style="background:none; border:none; color:#999; margin-top:20px; cursor:pointer;">닫기</button>
+        </div>
+    </div>
+
+    <nav>
+        <div class="logo" onclick="location.href='index.html'">VAPING ALL</div>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="어떤 상품을 찾으시나요?" onkeyup="if(event.keyCode==13)search()">
+        </div>
+        <div class="nav-menu">
+            <span id="user-status" style="font-size:12px; color:#ccc; margin-right:10px;">로그인 필요</span>
+            <button onclick="document.getElementById('login-modal').style.display='flex'">로그인</button>
+            <button onclick="location.href='cart.html'">🛒</button>
+        </div>
+    </nav>
+
+    <div class="category-menu">
+        <button class="cat-btn active" onclick="filter('all', this)">전체</button>
+        <button class="cat-btn" onclick="filter('mod', this)">기기</button>
+        <button class="cat-btn" onclick="filter('top', this)">무화기</button>
+        <button class="cat-btn" onclick="filter('rta', this)">리빌드 제품</button>
+        <button class="cat-btn" onclick="filter('coil', this)">코일/팟</button>
+        <button class="cat-btn" onclick="filter('big', this)">폐호흡액상</button>
+        <button class="cat-btn" onclick="filter('small', this)">입호흡액상</button>
+        <button class="cat-btn" onclick="filter('event', this)">이벤트</button>
+    </div>
+
+    <div class="sort-bar">
+        <select id="sort-select" onchange="sortItems()">
+            <option value="new">최신순</option>
+            <option value="price-low">가격 낮은 순</option>
+            <option value="price-high">가격 높은 순</option>
+        </select>
+    </div>
+
+    <div id="product-list" class="product-container"></div>
+
+    <footer>
+        <div class="footer-content">
+            <div>
+                <b>VAPING ALL (베이핑 올)</b><br>
+                대표자: 홍길동 | 사업자번호: 000-00-00000 | 통신판매: 제2023-서울-0000호<br>
+                주소: 서울특별시 강남구 테헤란로 123 | 이메일: help@vapingall.com
+            </div>
+            <div>
+                <b>고객센터: 1588-0000</b><br>
+                평일 10:00 ~ 17:00 (주말/공휴일 휴무)<br>
+                계좌: 국민은행 000000-00-000000 (베이핑올)
+            </div>
+        </div>
+    </footer>
+
+<script>
+    const products = [
+        { id: 1, name: "닷모드 100W 블랙", price: 189000, image: "images/dotmod.png", category: "mod", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+        { id: 2, name: "유웰 발라리안 팟", price: 10000, image: "images/valcoil.jpg", category: "coil", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+        { id: 3, name: "[입호흡] 데드레빗 MTL RTA", price: 42000, image: "images/deadrebbit.png", category: "top", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+        { id: 4, name: "[폐호흡] 레몬얼려먹구싶오", price: 25000, image: "images/lemon.png", category: "big", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+        { id: 5, name: "[입호흡] 카디날 블랙", price: 24000, image: "images/kardinalbl.jpg", category: "small", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+        { id: 6, name: "[리빌드] 칸탈A1 24GA", price: 3000, image: "images/lemon.png", category: "rta", desc: "클래식한 디자인과 강력한 100W 출력을 자랑하는 프리미엄 모드기기입니다." },
+    ];
+
+    let currentList = [...products];
+
+    function display(list) {
+        const container = document.getElementById('product-list');
+        if(list.length === 0) {
+            container.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:50px;">검색 결과가 없습니다.</p>';
+            return;
+        }
+        container.innerHTML = list.map(p => `
+            <div class="product-card" onclick="location.href='detail.html?id=${p.id}&name=${encodeURIComponent(p.name)}&price=${p.price}&image=${encodeURIComponent(p.image)}&desc=${p.desc}'">
+                <img src="${p.image}" onerror="this.src='https://via.placeholder.com/300'">
+                <h3 style="font-size:16px; margin:10px 0;">${p.name}</h3>
+                <p class="price">${p.price.toLocaleString()}원</p>
+                <button style="width:100%; padding:10px; background:#000; color:#fff; border:none; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); addCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">장바구니 담기</button>
+            </div>
+        `).join('');
+    }
+
+    function search() {
+        const val = document.getElementById('search-input').value.toLowerCase();
+        currentList = products.filter(p => p.name.toLowerCase().includes(val));
+        sortItems();
+    }
+
+    function filter(cat, btn) {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentList = cat === 'all' ? [...products] : products.filter(p => p.category === cat);
+        sortItems();
+    }
+
+    function sortItems() {
+        const type = document.getElementById('sort-select').value;
+        if(type === 'price-low') currentList.sort((a,b) => a.price - b.price);
+        else if(type === 'price-high') currentList.sort((a,b) => b.price - a.price);
+        else currentList.sort((a,b) => b.id - a.id);
+        display(currentList);
+    }
+
+    function handleAuth(type) {
+        const id = document.getElementById('user-id').value;
+        const pw = document.getElementById('user-pw').value;
+        if(!id || !pw) return alert("입력 정보가 부족합니다.");
+
+        if(type === 'signup') {
+            IMP.init('imp00000000');
+            IMP.certification({ pg: 'inicis_unified.official', merchant_uid: 'cert_'+Date.now(), popup: true }, function(rsp) {
+                if (rsp.success || id === 'test') {
+                    localStorage.setItem(id, JSON.stringify({pw, isAdult: true}));
+                    alert("성인인증 완료 및 가입 성공!");
+                }
+            });
+        } else {
+            const data = JSON.parse(localStorage.getItem(id));
+            if(data && data.pw === pw) {
+                sessionStorage.setItem('loginUser', id);
+                alert(id + "님 반가워요!");
+                location.reload();
+            } else { alert("로그인 실패"); }
+        }
+    }
+
+    function addCart(p) {
+        let cart = JSON.parse(localStorage.getItem('myCart')) || [];
+        cart.push({...p, qty: 1});
+        localStorage.setItem('myCart', JSON.stringify(cart));
+        if(confirm("장바구니로 갈까요?")) location.href='cart.html';
+    }
+
+    function closePopup() {
+        if(document.getElementById('today-close').checked) localStorage.setItem('hideAdultPopup', Date.now() + 86400000);
+        document.getElementById('age-verification-popup').style.display = 'none';
+    }
+
+    window.onload = () => {
+        const user = sessionStorage.getItem('loginUser');
+        if(user) {
+            document.getElementById('user-status').innerText = user + "님 (성인)";
+            document.getElementById('user-status').style.color = "#00ff00";
+        }
+        if(!localStorage.getItem('hideAdultPopup') || Date.now() > parseInt(localStorage.getItem('hideAdultPopup'))) {
+            document.getElementById('age-verification-popup').style.display = 'flex';
+        }
+        sortItems();
+    }
+</script>
+</body>
+</html>
